@@ -35,9 +35,11 @@ async function run() {
         });
         app.post('/product', async (req, res) => {
             const newProduct = req.body;
+            newProduct.quantity = parseInt(newProduct.quantity);
             const result = await warehousecollection.insertOne(newProduct);
             res.send(result);
         });
+
 
         // DELETE
         app.delete('/product/:id', async (req, res) => {
@@ -46,6 +48,29 @@ async function run() {
             const result = await warehousecollection.deleteOne(query);
             res.send(result);
         });
+
+        app.put('/product/decrease/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const inventory = await warehousecollection.updateOne(query, {
+                $inc: { quantity: -1 }
+
+            })
+            res.send(inventory);
+        })
+        app.put('/product/increase/:id', async (req, res) => {
+            const id = req.params.id;
+            const quantity = parseInt(req.body.quantity);
+            const query = { _id: ObjectId(id) };
+            const inventory = await warehousecollection.findOne(query);
+
+            const newQuantity = quantity + inventory.quantity;
+            const updateInventory = await warehousecollection.updateOne(query, {
+                $set: { quantity: newQuantity },
+            });
+
+            res.send(updateInventory);
+        })
     }
     finally {
 
